@@ -1,0 +1,172 @@
+// prisma/schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for Learning Styles
+enum LearningStyle {
+  VISUAL
+  AUDITORY
+  KINESTHETIC
+  READ_WRITE
+  MIXED
+}
+
+model User {
+  id               String           @id @default(uuid())
+  username         String           @unique
+  email            String           @unique
+  password         String // Hashed password
+  role             String           @default("USER") // New field for user roles
+  passwordChangedAt DateTime?       // New field for session invalidation
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  courses          Course[] // User can create multiple courses
+  enrollments      Enrollment[] // User can enroll in multiple courses
+  reviews          Review[] // User can write multiple reviews
+  comments         Comment[] // User can post multiple comments
+  interests        String[]         @default([])
+  skills           String[]         @default([])
+  learningStyle    LearningStyle?   // New field for preferred learning style
+  learningGoals    String[]         @default([]) // New field for declared learning goals
+  lessonProgresses LessonProgress[] // Add relation to LessonProgress
+}
+
+model Category {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  courses Course[]
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title            String
+  content          Json? // New field for structured course content (modules, etc.)
+  learningObjectives Json? // New field for specific learning outcomes
+  targetAudience   String? // New field for who the course is for
+  prerequisites    Json? // New field for what's needed before starting
+  keywords         Json? // New field for searchability
+  imageUrl         String?
+  price            Float?
+  isPublished      Boolean      @default(false)
+  categoryId       String
+  category         Category     @relation(fields: [categoryId], references: [id])
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  lessons          Lesson[]
+  enrollments      Enrollment[]
+  reviews          Review[] // Course can have multiple reviews
+  tags             String[] @default([])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([title]) // Add unique constraint for course title
+  @@index([categoryId])
+  @@index([userId])
+}
+
+model Lesson {
+  id               String           @id @default(uuid())
+  title            Json             // Stores {"en": "English Title", "es": "Titulo en Español"}
+  description      Json?            // Stores {"en": "English Description", "es": "Descripcion en Español"}
+  videoUrl         String?
+  modelUrl         String?          // New field for 3D model URL
+  content          String?          // New field for Markdown content
+  position         Int
+  isPublished      Boolean          @default(false)
+  courseId         String
+  course           Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  comments         Comment[]        // Lesson can have multiple comments
+  lessonProgresses LessonProgress[] // Add relation to LessonProgress
+  difficulty       Int?             // New field: Difficulty level (e.g., 1-5)
+  prerequisites    String[]         @default([]) // New field: List of prerequisite lesson IDs or concept names
+  topics           String[]         @default([]) // New field: Specific topics covered in the lesson
+  resourceType     String?          // New field: Primary type of resource (e.g., "video", "text", "simulation", "quiz")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@unique([courseId, position]) // Add unique constraint for lesson position within a course
+  @@index([courseId])
+}
+
+model Enrollment {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id])
+  completedLessons String[] @default([]) // New field for progress tracking
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int      // e.g., 1 to 5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, userId]) // A user can only review a course once
+  @@index([courseId])
+  @@index([userId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lessonId])
+}
+
+model Visit {
+  id        String   @id @default(uuid())
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LessonProgress {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  lessonId      String
+  lesson        Lesson   @relation(fields: [lessonId], references: [id])
+  quizScore     Int?     // Optional: Score on quizzes within the lesson
+  timeSpent     Int?     // Optional: Time spent on the lesson in seconds
+  isCompleted   Boolean  @default(false) // Whether the lesson is considered completed by the student
+  interactionData Json?    // New field: Detailed interaction data (e.g., video events, clicks)
+  attempts      Int      @default(0) // New field: Number of attempts on quizzes/exercises
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, lessonId]) // A user can only have one progress record per lesson
+  @@index([userId])
+  @@index([lessonId])
+}
