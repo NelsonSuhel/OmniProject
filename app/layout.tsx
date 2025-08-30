@@ -4,7 +4,8 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AuthProvider from "./components/AuthProvider";
-import { LanguageProvider } from "./context/LanguageContext"; // Import LanguageProvider
+import { LanguageProvider } from "./context/LanguageContext";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,17 +28,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <LanguageProvider> {/* Wrap with LanguageProvider */}
-            <Navbar />
-            <main className="container mx-auto px-6 py-8 pt-20">{children}</main>
-            <Footer />
-          </LanguageProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <LanguageProvider>
+              <Navbar />
+              <main className="container mx-auto px-6 py-8 pt-20">{children}</main>
+              <Footer />
+            </LanguageProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

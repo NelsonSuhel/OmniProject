@@ -1,0 +1,23 @@
+Por supuesto. Aquí tienes el informe detallado sobre el proceso de despliegue de tu aplicación en Cloud Run, basado en el historial de comandos que proporcionaste.
+
+Informe de Despliegue: Aplicación en Google Cloud Run
+Objetivo Inicial: Desplegar una aplicación directamente desde el código fuente a un servicio de Google Cloud Run, haciéndola accesible públicamente.
+
+Paso 1: Intento de Despliegue Inicial y Primer Error
+Comando Ejecutado: gcloud run deploy suhel-lms-app --source . --region us-central1 --allow-unauthenticated
+Análisis del Proceso:
+El comando inició el proceso de despliegue desde la fuente. Esto le indica a Google Cloud que use el servicio Cloud Build para construir una imagen de contenedor a partir de tu código (usando el Dockerfile del proyecto).
+Se solicitó y se concedió permiso para habilitar la API de Cloud Build (cloudbuild.googleapis.com), que es necesaria para este tipo de despliegue.
+Se solicitó y se concedió permiso para crear un repositorio en Artifact Registry, que es donde se almacena la imagen de contenedor una vez construida.
+Error: PERMISSION_DENIED: Build failed because the default service account is missing required IAM permissions.
+Causa Raíz: El proceso falló porque la cuenta de servicio que utiliza Cloud Build por defecto no tenía los permisos necesarios para completar el despliegue. Específicamente, no podía crear o modificar servicios en Cloud Run.
+Paso 2: Asignación de Permisos (La Solución)
+Análisis: Se identificó que la cuenta de servicio de Cloud Build (470980916112@cloudbuild.gserviceaccount.com) necesitaba roles de IAM (Gestión de Identidad y Acceso) adicionales para poder interactuar con otros servicios de Google Cloud.
+Acciones Correctivas: Se ejecutaron varios comandos gcloud projects add-iam-policy-binding para otorgar los roles necesarios a esa cuenta de servicio. Los roles más importantes que se agregaron fueron:
+roles/run.admin: Este es el permiso clave que le permite a la cuenta de servicio crear, modificar y gestionar servicios en Cloud Run.
+roles/iam.serviceAccountUser: Este permiso es fundamental, ya que le permite a la cuenta de servicio de Cloud Build actuar como la cuenta de servicio del entorno de ejecución de Cloud Run.
+roles/storage.admin: Permiso para gestionar el almacenamiento de objetos, necesario para que Cloud Build guarde los artefactos de la compilación en un bucket de Google Cloud Storage.
+Resultado Final: Despliegue Exitoso
+Acción: Con los permisos ya configurados correctamente, se volvió a ejecutar el mismo comando de despliegue: gcloud run deploy suhel-lms-app --source . --region us-central1 --allow-unauthenticated.
+Resultado: Esta vez, el proceso se completó sin errores. Cloud Build construyó la imagen, la subió a Artifact Registry y finalmente desplegó el contenedor como una nueva revisión del servicio suhel-lms-app en Cloud Run.
+Confirmación: El servicio se desplegó exitosamente y se te proporcionó la URL pública para acceder a tu aplicación: https://suhel-lms-app-470980916112.us-central1.run.app.

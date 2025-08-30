@@ -1,0 +1,88 @@
+¡Excelente iniciativa! Crear un procedimiento diario es clave para mantener la calidad y la consistencia, especialmente con la meta de ser un referente global.
+
+Aquí te propongo un procedimiento de trabajo diario, desde que enciendes tu laptop hasta que los cambios son visibles para el público. Este flujo de trabajo incorpora buenas prácticas de desarrollo y los pasos específicos que hemos descubierto juntos.
+
+Procedimiento de Trabajo Diario: Plataforma E-Learning OmniProject
+Fase 1: Preparación del Entorno de Desarrollo (Tu Laptop)
+Inicio del Día:
+
+Enciende tu laptop.
+Abre tus herramientas esenciales: tu editor de código (ej. VS Code), una terminal de comandos (Git Bash, PowerShell, etc.) y tu navegador web.
+Sincronización del Código:
+
+En la terminal, navega al directorio de tu proyecto:
+cd c:\Users\nelso\OneDrive\Documentos\suhel-lms-new
+Asegúrate de estar en la rama principal y trae los últimos cambios del repositorio remoto:
+git checkout main
+git pull origin main
+Creación de una Rama de Trabajo:
+
+Crea una nueva "rama" para aislar los cambios que harás hoy. Esto es una buena práctica para no afectar directamente el código principal. Nómbrala según la tarea del día.
+# Ejemplo para una nueva función:
+git checkout -b feature/leccion-interactiva-3d
+
+# Ejemplo para una corrección:
+git checkout -b fix/error-en-login
+Arranque del Servidor Local:
+
+Asegúrate de que todas las dependencias del proyecto estén instaladas:
+npm install
+Inicia el servidor de desarrollo local. Esto te permitirá ver tus cambios en tiempo real.
+npm run dev
+Abre tu navegador y visita http://localhost:3000. Deberías ver tu web funcionando en tu máquina.
+Fase 2: Ciclo de Desarrollo y Pruebas
+Desarrollar:
+
+Usa tu editor de código para realizar las modificaciones, agregar nuevas funcionalidades o corregir errores.
+Guarda los archivos y verás cómo la web en http://localhost:3000 se actualiza automáticamente para reflejar tus cambios.
+Guardar Progreso (Commits):
+
+A medida que completes pequeñas partes de tu tarea, guarda tu progreso en Git. Esto crea un historial de cambios claro.
+git add .
+git commit -m "feat: Se agregó el modelo 3D a la lección de alturas"
+Probar (Recomendado):
+
+Si tienes pruebas automatizadas, ejecútalas para asegurarte de que tus cambios no han roto nada.
+npm test
+Fase 3: Integración de Cambios
+Finalización de la Tarea:
+
+Una vez que la nueva función o corrección esté completa y probada en tu entorno local, es hora de integrarla al código principal.
+Fusión con la Rama Principal:
+
+Vuelve a la rama main, asegúrate de que esté actualizada y fusiona los cambios de tu rama de trabajo.
+git checkout main
+git pull origin main
+git merge feature/leccion-interactiva-3d  # Usa el nombre de tu rama
+Subir Cambios a GitHub:
+
+Empuja la rama main actualizada al repositorio remoto. Esto prepara el código para el despliegue.
+git push origin main
+Fase 4: Despliegue a Producción (Cloud Shell)
+Preparación del Entorno Cloud:
+
+Inicia sesión en la Consola de Google Cloud y abre Cloud Shell.
+Dentro de Cloud Shell, navega a tu proyecto y sincronízalo para obtener los cambios que acabas de subir:
+cd ~/OmniProject
+git pull origin main
+Migración de la Base de Datos (Si aplica):
+
+Solo si hiciste cambios en el schema.prisma. Si no, puedes saltar este paso.
+Paso CRÍTICO: Establece la variable de entorno de la base de datos usando comillas simples para evitar errores con la contraseña.
+export DATABASE_URL='postgresql://postgres:Suhel992910097!@34.171.135.246:5432/suhel_lms_db?schema=public'
+Ejecuta la migración:
+npx prisma migrate deploy
+Despliegue en Cloud Run:
+
+Lanza el comando de despliegue. Tomará el código actualizado y lo publicará.
+gcloud run deploy suhel-lms-app --source . --region us-central1 --allow-unauthenticated
+Verificación Final:
+
+Espera a que el comando termine. Te proporcionará la URL del servicio.
+Abre la URL pública en tu navegador y verifica que los nuevos cambios estén funcionando correctamente para todo el mundo.
+Fase 5: Fin de la Jornada
+Cierre:
+En la terminal de tu laptop, detén el servidor de desarrollo local presionando Ctrl + C.
+Cierra tus programas.
+Apaga tu laptop.
+Siguiendo este procedimiento, mantendrás un flujo de trabajo ordenado, seguro y profesional.

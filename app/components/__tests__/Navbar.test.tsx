@@ -25,13 +25,20 @@ jest.mock('next/navigation', () => ({
 }));
 
 describe('Navbar', () => {
+  let mockUseSession: jest.Mock;
+  let mockUseLanguage: jest.Mock;
+
   beforeEach(() => {
-    // Default mocks for each test
-    (useSession as jest.Mock).mockReturnValue({
+    // Assign the imported mock to the variable
+    mockUseSession = useSession as jest.Mock;
+    mockUseLanguage = useLanguage as jest.Mock;
+
+    // Now use the variable to set the mock return value
+    mockUseSession.mockReturnValue({
       data: null,
       status: 'unauthenticated',
     });
-    (useLanguage as jest.Mock).mockReturnValue({
+    mockUseLanguage.mockReturnValue({
       currentLanguage: 'es',
       setLanguage: jest.fn(),
     });
@@ -39,8 +46,8 @@ describe('Navbar', () => {
 
   test('renders the logo and title', () => {
     render(<Navbar />);
-    expect(screen.getByAltText('Suhel OmniProject Logo')).toBeInTheDocument();
-    expect(screen.getByText('Suhel OmniProject')).toBeInTheDocument();
+    expect(screen.getByAltText('Suhel OmniProjects Logo')).toBeInTheDocument();
+    expect(screen.getByText('Sistema de gestión de aprendizaje OmniProject')).toBeInTheDocument();
   });
 
   test('renders navigation links', () => {
@@ -58,21 +65,20 @@ describe('Navbar', () => {
   });
 
   test('renders dashboard and logout button when authenticated', () => {
-    (useSession as jest.Mock).mockReturnValue({
-      data: { user: { email: 'test@example.com' } },
+    mockUseSession.mockReturnValue({
+      data: { user: { name: 'Test User' } },
       status: 'authenticated',
     });
     render(<Navbar />);
     expect(screen.getByRole('link', { name: /Dashboard/i })).toBeInTheDocument();
-    expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Cerrar Sesión/i })).toBeInTheDocument();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sign Out/i })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Login/i })).not.toBeInTheDocument();
   });
 
   test('renders language selector', () => {
     render(<Navbar />);
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Español' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'English' })).toBeInTheDocument();
+    // The new component uses a button to open the dropdown
+    expect(screen.getByRole('button', { name: /Español/i })).toBeInTheDocument();
   });
 });
